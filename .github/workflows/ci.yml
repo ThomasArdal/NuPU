@@ -26,7 +26,7 @@ jobs:
       run: dotnet build -c Release
 
     - name: Pack
-      run: dotnet pack -c Release src/NuPU/NuPu.csproj /p:Version=0.1.${{ github.run_number }}
+      run: dotnet pack -c Release src/NuPU/NuPU.csproj /p:Version=0.1.${{ github.run_number }}
 
     - name: Push to nuget.org
       run: dotnet nuget push src/NuPU/nupkg/NuPu.0.1.${{ github.run_number }}.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
