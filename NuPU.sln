@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31410.357
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{DD115E14-4D8F-4D7D-97D3-5D1C4876D2EA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuPU", "src\NuPU\NuPU.csproj", "{FE935748-5ED0-493C-9535-9DFF8E9F7ABD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FE935748-5ED0-493C-9535-9DFF8E9F7ABD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE935748-5ED0-493C-9535-9DFF8E9F7ABD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE935748-5ED0-493C-9535-9DFF8E9F7ABD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE935748-5ED0-493C-9535-9DFF8E9F7ABD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FE935748-5ED0-493C-9535-9DFF8E9F7ABD} = {DD115E14-4D8F-4D7D-97D3-5D1C4876D2EA}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1D0A279A-6644-4296-9FDE-5721F4F4E9B0}
+	EndGlobalSection
+EndGlobal

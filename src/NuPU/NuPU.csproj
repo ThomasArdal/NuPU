@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AssemblyName>nupu</AssemblyName>
+    <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
+    <Platforms>x64</Platforms>
+    <!-- NuGet package -->
+    <Description>NuGet Package Updater (NuPU) is an interactive CLI for updating NuGet packages.</Description>
+    <Authors>ThomasArdal</Authors>
+    <PackageId>NuPU</PackageId>
+    <PackageProjectUrl>https://github.com/ThomasArdal/NuPU</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ThomasArdal/NuPU</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <!-- .NET Core tool -->
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>nupu</ToolCommandName>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NuGet.Protocol" Version="5.11.0" />
+    <PackageReference Include="Spectre.Console" Version="0.41.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
+</Project>
