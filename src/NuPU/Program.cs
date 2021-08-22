@@ -84,22 +84,25 @@ namespace NuPU
                             FindPackageByIdResource resource = await repository.GetResourceAsync<FindPackageByIdResource>();
                             using var cacheContext = new SourceCacheContext();
                             var allVersions = await resource.GetAllVersionsAsync(package.Id, cacheContext, NullLogger.Instance, CancellationToken.None);
-                            var newerVersions = allVersions.Where(v => v > nugetVersion);
+                            var newerVersions = allVersions.Where(v => v > nugetVersion && !v.IsLegacyVersion);
                             if (newerVersions.Count() == 0)
                             {
                                 AnsiConsole.MarkupLine(UpToDate);
                                 break;
                             }
 
+                            var stableVersions = newerVersions.Where(v => !v.IsPrerelease);
+                            var prereleaseVersions = newerVersions.Where(v => v.IsPrerelease);
+
                             var versionsToShow = new List<NuGetVersion>();
-                            var highestNewerMajor = newerVersions.Where(v => v.Version.Major > nugetVersion.Major).GroupBy(v => v.Version.Major).Select(g => g.OrderByDescending(v => v.Version).First());
-                            versionsToShow.AddRange(highestNewerMajor);
-                            var highestNewerMinor = newerVersions.Where(v => v.Version.Major == nugetVersion.Major && v.Version.Minor > nugetVersion.Minor).OrderByDescending(v => v.Version).FirstOrDefault();
-                            if (highestNewerMinor != null) versionsToShow.Add(highestNewerMinor);
-                            var highestNewerPatch = newerVersions.Where(v => v.Version.Major == nugetVersion.Major && v.Version.Minor == nugetVersion.Minor && v.Version.Build > nugetVersion.Patch).OrderByDescending(v => v.Version).FirstOrDefault();
-                            if (highestNewerPatch != null) versionsToShow.Add(highestNewerPatch);
-                            var highestNewerRevision = newerVersions.Where(v => v.Version.Major == nugetVersion.Major && v.Version.Minor == nugetVersion.Minor && v.Version.Build == nugetVersion.Patch && v.Version.Revision > nugetVersion.Revision).OrderByDescending(v => v.Version).FirstOrDefault();
-                            if (highestNewerRevision != null) versionsToShow.Add(highestNewerRevision);
+                            versionsToShow.AddRange(HighestMajor(stableVersions, nugetVersion));
+                            versionsToShow.AddRange(HighestMajor(prereleaseVersions, nugetVersion));
+                            versionsToShow.AddRange(HighestMinor(stableVersions, nugetVersion));
+                            versionsToShow.AddRange(HighestMinor(prereleaseVersions, nugetVersion));
+                            versionsToShow.AddRange(HighestPatch(stableVersions, nugetVersion));
+                            versionsToShow.AddRange(HighestPatch(prereleaseVersions, nugetVersion));
+                            versionsToShow.AddRange(HighestRevision(stableVersions, nugetVersion));
+                            versionsToShow.AddRange(HighestRevision(prereleaseVersions, nugetVersion));
 
                             if (versionsToShow.Count == 0)
                             {
@@ -110,7 +113,7 @@ namespace NuPU
                             var choices = new List<string>();
                             var currentVersionString = $"{package.Version} (current)";
                             choices.Add(currentVersionString);
-                            choices.AddRange(versionsToShow.OrderBy(v => v.Version).Select(v => v.ToString()));
+                            choices.AddRange(versionsToShow.OrderBy(v => v).Select(v => v.ToString()));
 
                             AnsiConsole.MarkupLine(NeedsUpdate);
                             var choice = AnsiConsole.Prompt(new SelectionPrompt<string>().PageSize(10).AddChoices(choices.ToArray()));
@@ -154,6 +157,35 @@ namespace NuPU
             }
 
             return 0;
+        }
+
+        private static IEnumerable<NuGetVersion> HighestRevision(IEnumerable<NuGetVersion> versions, NuGetVersion nugetVersion)
+        {
+            var toReturn = new List<NuGetVersion>();
+            var toAdd = versions.Where(v => v.Version.Major == nugetVersion.Major && v.Version.Minor == nugetVersion.Minor && v.Version.Build == nugetVersion.Patch && v.Version.Revision > nugetVersion.Revision).OrderByDescending(v => v).FirstOrDefault();
+            if (toAdd != null) toReturn.Add(toAdd);
+            return toReturn;
+        }
+
+        private static IEnumerable<NuGetVersion> HighestPatch(IEnumerable<NuGetVersion> versions, NuGetVersion nugetVersion)
+        {
+            var toReturn = new List<NuGetVersion>();
+            var toAdd = versions.Where(v => v.Version.Major == nugetVersion.Major && v.Version.Minor == nugetVersion.Minor && v.Version.Build > nugetVersion.Patch).OrderByDescending(v => v).FirstOrDefault();
+            if (toAdd != null) toReturn.Add(toAdd);
+            return toReturn;
+        }
+
+        private static IEnumerable<NuGetVersion> HighestMinor(IEnumerable<NuGetVersion> versions, NuGetVersion nugetVersion)
+        {
+            var toReturn = new List<NuGetVersion>();
+            var toAdd = versions.Where(v => v.Version.Major == nugetVersion.Major && v.Version.Minor > nugetVersion.Minor).OrderByDescending(v => v).FirstOrDefault();
+            if (toAdd != null) toReturn.Add(toAdd);
+            return toReturn;
+        }
+
+        private static IEnumerable<NuGetVersion> HighestMajor(IEnumerable<NuGetVersion> versions, NuGetVersion nugetVersion)
+        {
+            return versions.Where(v => v.Version.Major > nugetVersion.Major).GroupBy(v => v.Version.Major).Select(g => g.OrderByDescending(v => v).First());
         }
 
         private class Package
