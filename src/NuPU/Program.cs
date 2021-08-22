@@ -59,7 +59,20 @@ namespace NuPU
 
                 foreach (var package in packages)
                 {
-                    var nugetVersion = new NuGetVersion(package.Version);
+                    NuGetVersion nugetVersion = null;
+                    if (VersionRange.TryParse(package.Version, out VersionRange versionRange))
+                    {
+                        nugetVersion = versionRange.MinVersion;
+                    }
+                    else if (NuGetVersion.TryParse(package.Version, out NuGetVersion parsedVersion))
+                    {
+                        nugetVersion = parsedVersion;
+                    }
+                    else
+                    {
+                        AnsiConsole.MarkupLine($"[yellow]Skipping {package.Id} because of unknown version[/]");
+                        continue;
+                    }
 
                     AnsiConsole.Markup(package.Id);
 
