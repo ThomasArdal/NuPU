@@ -12,6 +12,7 @@
     <RepositoryUrl>https://github.com/ThomasArdal/NuPU.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageIcon>icon.png</PackageIcon>
     <!-- .NET Core tool -->
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
@@ -22,6 +23,10 @@
   <ItemGroup>
     <PackageReference Include="NuGet.Protocol" Version="5.11.0" />
     <PackageReference Include="Spectre.Console" Version="0.41.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="images\icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>
