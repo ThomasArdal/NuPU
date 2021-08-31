@@ -114,6 +114,7 @@ namespace NuPU
                             choices.Add(currentVersionString);
                             choices.AddRange(versionsToShow.OrderBy(v => v).Select(v => v.ToString()));
 
+                            showUpToDate = false;
                             AnsiConsole.MarkupLine(NeedsUpdate);
                             var choice = AnsiConsole.Prompt(new SelectionPrompt<string>().PageSize(10).AddChoices(choices.ToArray()));
 
@@ -147,8 +148,6 @@ namespace NuPU
                                     AnsiConsole.MarkupLine($"[red]{lines.Last()}[/]");
                                 }
                             }
-
-                            showUpToDate = false;
                         }
                         catch {}
                     }
