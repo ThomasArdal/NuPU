@@ -76,6 +76,7 @@ namespace NuPU
 
                     AnsiConsole.Markup(package.Id);
 
+                    var showUpToDate = true;
                     foreach (var source in enabledSources)
                     {
                         var repository = new SourceRepository(source, Repository.Provider.GetCoreV3());
@@ -87,8 +88,7 @@ namespace NuPU
                             var newerVersions = allVersions.Where(v => v > nugetVersion && !v.IsLegacyVersion);
                             if (newerVersions.Count() == 0)
                             {
-                                AnsiConsole.MarkupLine(UpToDate);
-                                break;
+                                continue;
                             }
 
                             var stableVersions = newerVersions.Where(v => !v.IsPrerelease);
@@ -106,8 +106,7 @@ namespace NuPU
 
                             if (versionsToShow.Count == 0)
                             {
-                                AnsiConsole.MarkupLine(UpToDate);
-                                break;
+                                continue;
                             }
 
                             var choices = new List<string>();
@@ -118,7 +117,7 @@ namespace NuPU
                             AnsiConsole.MarkupLine(NeedsUpdate);
                             var choice = AnsiConsole.Prompt(new SelectionPrompt<string>().PageSize(10).AddChoices(choices.ToArray()));
 
-                            if (choice == currentVersionString) break;
+                            if (choice == currentVersionString) continue;
 
                             var dotnet = new ProcessStartInfo("dotnet", $"add package {package.Id} -v {choice} -s {source.SourceUri}")
                             {
@@ -149,10 +148,12 @@ namespace NuPU
                                 }
                             }
 
-                            break;
+                            showUpToDate = false;
                         }
                         catch {}
                     }
+
+                    if (showUpToDate) AnsiConsole.MarkupLine(UpToDate);
                 }
             }
 
