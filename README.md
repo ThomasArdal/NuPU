@@ -14,3 +14,5 @@ Run the `nupu` command in the root of your project or with an optional directory
 ```console
 nupu c:\projects\project-to-update
 ```
+
+test
