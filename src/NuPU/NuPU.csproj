@@ -13,6 +13,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <!-- .NET Core tool -->
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
@@ -27,6 +28,7 @@
 
   <ItemGroup>
     <None Include="images\icon.png" Pack="true" PackagePath="\" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>
