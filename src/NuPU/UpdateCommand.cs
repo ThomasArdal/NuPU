@@ -84,7 +84,7 @@ namespace NuPU
                             FindPackageByIdResource resource = await repository.GetResourceAsync<FindPackageByIdResource>();
                             using var cacheContext = new SourceCacheContext();
                             var allVersions = await resource.GetAllVersionsAsync(package.Id, cacheContext, NullLogger.Instance, CancellationToken.None);
-                            var newerVersions = allVersions.Where(v => v > nugetVersion && !v.IsLegacyVersion);
+                            var newerVersions = allVersions.Where(v => v > nugetVersion);
                             if (newerVersions.Count() == 0)
                             {
                                 continue;
