@@ -4,6 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <AssemblyName>nupu</AssemblyName>
+    <LangVersion>9.0</LangVersion>
     <!-- NuGet package -->
     <Description>NuGet Package Updater (NuPU) is an interactive CLI for updating NuGet packages.</Description>
     <Authors>ThomasArdal</Authors>
@@ -23,7 +24,7 @@
 
   <ItemGroup>
     <PackageReference Include="NuGet.Protocol" Version="5.11.0" />
-    <PackageReference Include="Spectre.Console" Version="0.41.0" />
+    <PackageReference Include="Spectre.Console" Version="0.43.0" />
   </ItemGroup>
 
   <ItemGroup>

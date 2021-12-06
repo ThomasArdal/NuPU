@@ -1,4 +1,5 @@
 # NuPU
+
 NuGet Package Updater (NuPU) is an interactive CLI for updating NuGet packages.
 
 ## Installation
@@ -9,8 +10,26 @@ dotnet tool install --global NuPU
 
 ## Usage
 
-Run the `nupu` command in the root of your project or with an optional directory argument:
+Run the `nupu` command in the root of your project to check all packages:
 
 ```console
-nupu c:\projects\project-to-update
+nupu
+```
+
+Check all packages in a specific directory using the `path` option:
+
+```console
+nupu --path c:\projects\project-to-update
+```
+
+Check a single package for updates using the `package` option:
+
+```console
+nupu --package Spectre.Console
+```
+
+Get additional help using the `help` option:
+
+```console
+nupu --help
 ```
