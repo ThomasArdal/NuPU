@@ -24,9 +24,9 @@ namespace NuPU
 
         public override async Task<int> ExecuteAsync(CommandContext context, UpdateCommandSettings updateCommandSettings)
         {
-            var rootPath = string.IsNullOrWhiteSpace(updateCommandSettings.Path) || !Directory.Exists(updateCommandSettings.Path)
+            var rootPath = string.IsNullOrWhiteSpace(updateCommandSettings.Directory) || !Directory.Exists(updateCommandSettings.Directory)
                 ? Directory.GetCurrentDirectory()
-                : updateCommandSettings.Path;
+                : updateCommandSettings.Directory;
             var settings = Settings.LoadDefaultSettings(rootPath);
             var enabledSources = SettingsUtility.GetEnabledSources(settings);
 
@@ -195,12 +195,12 @@ namespace NuPU
 
         public class UpdateCommandSettings : CommandSettings
         {
-            [Description("A root path to search. If not specified the current directory is used.")]
-            [CommandOption("-p|--path")]
-            public string Path { get; set; }
+            [Description("A root directory to search. If not specified the current directory is used.")]
+            [CommandOption("-d|--directory")]
+            public string Directory { get; set; }
 
             [Description("A NuGet package to update. If not specified all packages are checked for updates.")]
-            [CommandOption("-n|--package")]
+            [CommandOption("-p|--package")]
             public string Package { get; set; }
         }
     }

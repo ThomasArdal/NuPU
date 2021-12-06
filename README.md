@@ -16,10 +16,10 @@ Run the `nupu` command in the root of your project to check all packages:
 nupu
 ```
 
-Check all packages in a specific directory using the `path` option:
+Check all packages in a specific directory using the `directory` option:
 
 ```console
-nupu --path c:\projects\project-to-update
+nupu --directory c:\projects\project-to-update
 ```
 
 Check a single package for updates using the `package` option:
