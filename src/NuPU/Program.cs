@@ -1,4 +1,5 @@
-﻿using Spectre.Console.Cli;
+﻿using Spectre.Console;
+using Spectre.Console.Cli;
 using System.Threading.Tasks;
 
 namespace NuPU
@@ -13,6 +14,7 @@ namespace NuPU
     {
         public static async Task<int> Main(string[] args)
         {
+            AnsiConsole.Write(new FigletText("NuPU").LeftAligned().Color(new Color(0, 72, 128)));
             var app = new CommandApp<UpdateCommand>();
             return await app.RunAsync(args);
         }
