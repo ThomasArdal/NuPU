@@ -195,11 +195,11 @@ namespace NuPU
 
         public class UpdateCommandSettings : CommandSettings
         {
-            [Description("A root directory to search. If not specified the current directory is used.")]
+            [Description("A root directory to search (default: current directory)")]
             [CommandOption("-d|--directory")]
             public string Directory { get; set; }
 
-            [Description("A NuGet package to update. If not specified all packages are checked for updates.")]
+            [Description("A NuGet package to update (default: all)")]
             [CommandOption("-p|--package")]
             public string Package { get; set; }
 
