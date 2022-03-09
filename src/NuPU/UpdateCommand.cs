@@ -31,7 +31,7 @@ namespace NuPU
             var enabledSources = SettingsUtility.GetEnabledSources(settings);
 
             var rootDir = new DirectoryInfo(rootPath);
-            var csProjFiles = rootDir.EnumerateFiles("*.csproj", updateCommandSettings.Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+            var csProjFiles = rootDir.EnumerateFiles("*.csproj", new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = updateCommandSettings.Recursive });
             var ignoreDirs = new[] { ".git", ".github", ".vs", ".vscode", "bin", "obj", "packages", "node_modules" };
             foreach (var csProjFile in csProjFiles.Where(f => !ignoreDirs.Contains(f.DirectoryName)))
             {
