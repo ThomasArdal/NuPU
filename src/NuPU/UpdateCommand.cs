@@ -31,7 +31,7 @@ namespace NuPU
             var enabledSources = SettingsUtility.GetEnabledSources(settings);
 
             var rootDir = new DirectoryInfo(rootPath);
-            var csProjFiles = rootDir.EnumerateFiles("*.csproj", SearchOption.AllDirectories);
+            var csProjFiles = rootDir.EnumerateFiles("*.csproj", updateCommandSettings.Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
             var ignoreDirs = new[] { ".git", ".github", ".vs", ".vscode", "bin", "obj", "packages", "node_modules" };
             foreach (var csProjFile in csProjFiles.Where(f => !ignoreDirs.Contains(f.DirectoryName)))
             {
@@ -202,6 +202,11 @@ namespace NuPU
             [Description("A NuGet package to update. If not specified all packages are checked for updates.")]
             [CommandOption("-p|--package")]
             public string Package { get; set; }
+
+            [Description("Include subdirectories when looking for csproj files (default: true)")]
+            [CommandOption("-r|--recursive")]
+            [DefaultValue(true)]
+            public bool Recursive { get; set; }
         }
     }
 }
