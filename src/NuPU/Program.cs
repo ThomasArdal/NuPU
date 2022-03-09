@@ -16,6 +16,15 @@ namespace NuPU
         {
             AnsiConsole.Write(new FigletText("NuPU").LeftAligned().Color(new Color(0, 72, 128)));
             var app = new CommandApp<UpdateCommand>();
+            app.Configure(config =>
+            {
+                config.SetApplicationName("nupu");
+                config.AddExample(new string[] { });
+                config.AddExample(new[] { "--directory c:\\myproject" });
+                config.AddExample(new[] { "--recursive false" });
+                config.AddExample(new[] { "--package System.Text.Json" });
+                config.AddExample(new[] { "-d c:\\myproject", "-r false", "-p System.Text.Json" });
+            });
             return await app.RunAsync(args);
         }
     }
