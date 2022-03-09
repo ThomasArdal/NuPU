@@ -27,14 +27,14 @@ namespace NuPU
             var rootPath = string.IsNullOrWhiteSpace(updateCommandSettings.Directory) || !Directory.Exists(updateCommandSettings.Directory)
                 ? Directory.GetCurrentDirectory()
                 : updateCommandSettings.Directory;
-            var settings = Settings.LoadDefaultSettings(rootPath);
-            var enabledSources = SettingsUtility.GetEnabledSources(settings);
 
             var rootDir = new DirectoryInfo(rootPath);
             var csProjFiles = rootDir.EnumerateFiles("*.csproj", new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = updateCommandSettings.Recursive });
             var ignoreDirs = new[] { ".git", ".github", ".vs", ".vscode", "bin", "obj", "packages", "node_modules" };
             foreach (var csProjFile in csProjFiles.Where(f => !ignoreDirs.Contains(f.DirectoryName)))
             {
+                var settings = Settings.LoadDefaultSettings(csProjFile.Directory.FullName);
+                var enabledSources = SettingsUtility.GetEnabledSources(settings);
                 AnsiConsole.MarkupLine($"Analyzing [yellow]{csProjFile.FullName}[/]");
                 var packages = new List<Package>();
                 using (var fileStream = File.OpenRead(csProjFile.FullName))
