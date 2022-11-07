@@ -56,7 +56,7 @@ namespace NuPU
 
                 var projectFileResults = new Dictionary<string, string>();
 
-                foreach (var package in packages.Where(p => string.IsNullOrWhiteSpace(updateCommandSettings.Package) || p.Id == updateCommandSettings.Package))
+                foreach (var package in packages.Where(p => string.IsNullOrWhiteSpace(updateCommandSettings.Package) || string.Equals(p.Id, updateCommandSettings.Package, StringComparison.OrdinalIgnoreCase)))
                 {
                     NuGetVersion nugetVersion = null;
                     if (VersionRange.TryParse(package.Version, out VersionRange versionRange))
@@ -84,8 +84,8 @@ namespace NuPU
                             FindPackageByIdResource resource = await repository.GetResourceAsync<FindPackageByIdResource>();
                             using var cacheContext = new SourceCacheContext();
                             var allVersions = await resource.GetAllVersionsAsync(package.Id, cacheContext, NullLogger.Instance, CancellationToken.None);
-                            var newerVersions = allVersions.Where(v => v > nugetVersion);
-                            if (newerVersions.Count() == 0)
+                            var newerVersions = allVersions.Where(v => v > nugetVersion).ToList();
+                            if (!newerVersions.Any())
                             {
                                 continue;
                             }
@@ -133,8 +133,9 @@ namespace NuPU
                             process.WaitForExit();
                             var exitCode = process.ExitCode;
 
-                            if (exitCode < 0)
+                            if (exitCode != 0)
                             {
+                                Console.WriteLine(outputAndError[0]);
                                 Console.WriteLine(outputAndError[1]);
                                 return -1;
                             }
