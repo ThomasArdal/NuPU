@@ -135,8 +135,8 @@ namespace NuPU
 
                             if (exitCode != 0)
                             {
-                                Console.WriteLine(outputAndError[0]);
-                                Console.WriteLine(outputAndError[1]);
+                                if (!string.IsNullOrWhiteSpace(outputAndError[0])) Console.WriteLine(outputAndError[0]);
+                                if (!string.IsNullOrWhiteSpace(outputAndError[1])) AnsiConsole.MarkupLine($"[red]{outputAndError[1]}[/]");
                                 return -1;
                             }
 
