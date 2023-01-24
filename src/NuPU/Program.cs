@@ -14,7 +14,7 @@ namespace NuPU
     {
         public static async Task<int> Main(string[] args)
         {
-            AnsiConsole.Write(new FigletText("NuPU").LeftAligned().Color(new Color(0, 72, 128)));
+            AnsiConsole.Write(new FigletText("NuPU").Color(new Color(0, 72, 128)));
             var app = new CommandApp<UpdateCommand>();
             app.Configure(config =>
             {

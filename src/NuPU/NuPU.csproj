@@ -23,8 +23,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NuGet.Protocol" Version="5.11.0" />
-    <PackageReference Include="Spectre.Console" Version="0.43.0" />
+    <PackageReference Include="NuGet.Protocol" Version="5.11.3" />
+    <PackageReference Include="Spectre.Console" Version="0.46.0" />
+    <PackageReference Include="Spectre.Console.Cli" Version="0.46.0" />
   </ItemGroup>
 
   <ItemGroup>
