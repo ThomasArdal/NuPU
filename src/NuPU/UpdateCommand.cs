@@ -91,17 +91,21 @@ namespace NuPU
                             }
 
                             var stableVersions = newerVersions.Where(v => !v.IsPrerelease);
-                            var prereleaseVersions = newerVersions.Where(v => v.IsPrerelease);
 
                             var versionsToShow = new List<NuGetVersion>();
                             versionsToShow.AddRange(HighestMajor(stableVersions, nugetVersion));
-                            versionsToShow.AddRange(HighestMajor(prereleaseVersions, nugetVersion));
                             versionsToShow.AddRange(HighestMinor(stableVersions, nugetVersion));
-                            versionsToShow.AddRange(HighestMinor(prereleaseVersions, nugetVersion));
                             versionsToShow.AddRange(HighestPatch(stableVersions, nugetVersion));
-                            versionsToShow.AddRange(HighestPatch(prereleaseVersions, nugetVersion));
                             versionsToShow.AddRange(HighestRevision(stableVersions, nugetVersion));
-                            versionsToShow.AddRange(HighestRevision(prereleaseVersions, nugetVersion));
+
+                            if (updateCommandSettings.IncludePrerelease)
+                            {
+                                var prereleaseVersions = newerVersions.Where(v => v.IsPrerelease);
+                                versionsToShow.AddRange(HighestMajor(prereleaseVersions, nugetVersion));
+                                versionsToShow.AddRange(HighestMinor(prereleaseVersions, nugetVersion));
+                                versionsToShow.AddRange(HighestPatch(prereleaseVersions, nugetVersion));
+                                versionsToShow.AddRange(HighestRevision(prereleaseVersions, nugetVersion));
+                            }
 
                             if (versionsToShow.Count == 0)
                             {
@@ -208,6 +212,11 @@ namespace NuPU
             [CommandOption("-r|--recursive")]
             [DefaultValue(true)]
             public bool Recursive { get; set; }
+
+            [Description("Include prerelease versions in suggested updates (default: true)")]
+            [CommandOption("-i|--includeprerelease")]
+            [DefaultValue(true)]
+            public bool IncludePrerelease { get; set; }
         }
     }
 }

@@ -23,7 +23,8 @@ namespace NuPU
                 config.AddExample(new[] { "--directory c:\\myproject" });
                 config.AddExample(new[] { "--recursive false" });
                 config.AddExample(new[] { "--package System.Text.Json" });
-                config.AddExample(new[] { "-d c:\\myproject", "-r false", "-p System.Text.Json" });
+                config.AddExample(new[] { "--includeprerelease false" });
+                config.AddExample(new[] { "-d c:\\myproject", "-r false", "-p System.Text.Json", "-i false" });
             });
             return await app.RunAsync(args);
         }
