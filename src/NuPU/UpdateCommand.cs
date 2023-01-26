@@ -13,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace NuPU
@@ -39,17 +40,25 @@ namespace NuPU
                 var packages = new List<Package>();
                 using (var fileStream = File.OpenRead(csProjFile.FullName))
                 {
-                    var document = XDocument.Load(fileStream);
-                    var ns = document.Root.GetDefaultNamespace();
-                    var project = document.Element(ns + "Project");
-                    var itemGroups = project
-                        .Elements(ns + "ItemGroup")
-                        .ToList();
-                    packages.AddRange(itemGroups.SelectMany(ig => ig.Elements(ns + "PackageReference")).Select(e => new Package
+                    try
                     {
-                        Id = e.Attribute("Include")?.Value,
-                        Version = e.Attribute("Version")?.Value ?? e.Element(ns + "Version")?.Value,
-                    }));
+                        var document = XDocument.Load(fileStream);
+                        var ns = document.Root.GetDefaultNamespace();
+                        var project = document.Element(ns + "Project");
+                        var itemGroups = project
+                            .Elements(ns + "ItemGroup")
+                            .ToList();
+                        packages.AddRange(itemGroups.SelectMany(ig => ig.Elements(ns + "PackageReference")).Select(e => new Package
+                        {
+                            Id = e.Attribute("Include")?.Value,
+                            Version = e.Attribute("Version")?.Value ?? e.Element(ns + "Version")?.Value,
+                        }));
+                    }
+                    catch (XmlException e)
+                    {
+                        AnsiConsole.MarkupLine($"[red]Error[/] {e.Message}");
+                        continue;
+                    }
                 }
 
                 if (packages.Count() == 0) continue;
