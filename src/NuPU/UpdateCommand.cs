@@ -122,7 +122,7 @@ namespace NuPU
                             }
 
                             var choices = new List<string>();
-                            var currentVersionString = $"{package.Version} (current)";
+                            var currentVersionString = $"{nugetVersion.OriginalVersion} (current)";
                             choices.Add(currentVersionString);
                             choices.AddRange(versionsToShow.OrderBy(v => v).Select(v => v.ToString()));
 
