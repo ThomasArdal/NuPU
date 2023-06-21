@@ -186,7 +186,7 @@ namespace NuPU
             var directory = fileInfo.Directory;
             while (directory != null)
             {
-                if (ignoreDirs.Contains(directory.Name)) return true;
+                if (ignoreDirs.Contains(directory.Name, StringComparer.OrdinalIgnoreCase)) return true;
                 directory = directory.Parent;
             }
 
