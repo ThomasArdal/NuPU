@@ -36,9 +36,10 @@ namespace NuPU
                 : updateCommandSettings.Directory;
 
             var rootDir = new DirectoryInfo(rootPath);
+            var ignoreDirs = ResolveIgnoreDirs(rootPath);
+
             var csProjFiles = rootDir.EnumerateFiles("*.csproj", new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = updateCommandSettings.Recursive });
-            var ignoreDirs = new[] { ".git", ".github", ".vs", ".vscode", "bin", "obj", "packages", "node_modules" };
-            foreach (var csProjFile in csProjFiles.Where(f => !ignoreDirs.Contains(f.DirectoryName)))
+            foreach (var csProjFile in csProjFiles.Where(f => !Ignored(f, ignoreDirs)))
             {
                 var settings = Settings.LoadDefaultSettings(csProjFile.Directory.FullName);
                 var enabledSources = SettingsUtility.GetEnabledSources(settings);
@@ -176,6 +177,35 @@ namespace NuPU
             }
 
             return 0;
+        }
+
+        private bool Ignored(FileInfo fileInfo, List<string> ignoreDirs)
+        {
+            if (ignoreDirs.Count == 0) return false;
+
+            var directory = fileInfo.Directory;
+            while (directory != null)
+            {
+                if (ignoreDirs.Contains(directory.Name)) return true;
+                directory = directory.Parent;
+            }
+
+            return false;
+        }
+
+        private List<string> ResolveIgnoreDirs(string rootPath)
+        {
+            var ignoreDirs = new List<string> { ".git", ".github", ".vs", ".vscode", "bin", "obj", "packages", "node_modules" };
+
+            var nupuIgnore = Path.Combine(rootPath, ".nupuignore");
+            if (File.Exists(nupuIgnore))
+            {
+                AnsiConsole.MarkupLine($"Ignore directories in [yellow]{nupuIgnore}[/]");
+                var lines = File.ReadAllLines(nupuIgnore);
+                ignoreDirs = lines.Where(l => !string.IsNullOrWhiteSpace(l)).ToList();
+            }
+
+            return ignoreDirs;
         }
 
         private static IEnumerable<NuGetVersion> HighestRevision(IEnumerable<NuGetVersion> versions, NuGetVersion nugetVersion)
