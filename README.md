@@ -49,3 +49,7 @@ packages
 node_modules
 my_custom_folder
 ```
+
+---
+
+Sponsored by [elmah.io](https://elmah.io).
