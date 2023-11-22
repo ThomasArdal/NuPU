@@ -181,13 +181,17 @@ namespace NuPU
                         catch { }
                     }
 
+                    if (showUpToDate) AnsiConsole.MarkupLine(UpToDate);
+
                     // If we had any unauthenticated sources we remove them to avoid requesting them for the next package.
                     foreach (var sourceToDelete in sourcesToDelete)
                     {
-                        if (enabledSources.Contains(sourceToDelete)) enabledSources.Remove(sourceToDelete);
+                        if (enabledSources.Contains(sourceToDelete))
+                        {
+                            AnsiConsole.MarkupLine($"[yellow]Unauthenticated source '{sourceToDelete.Name}'. Skipping further requests on this source.[/]");
+                            enabledSources.Remove(sourceToDelete);
+                        }
                     }
-
-                    if (showUpToDate) AnsiConsole.MarkupLine(UpToDate);
                 }
             }
 
