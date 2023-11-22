@@ -11,6 +11,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -45,7 +46,7 @@ namespace NuPU
             foreach (var csProjFile in csProjFiles.Where(f => !Ignored(f, ignoreDirs)))
             {
                 var settings = Settings.LoadDefaultSettings(csProjFile.Directory.FullName);
-                var enabledSources = SettingsUtility.GetEnabledSources(settings);
+                var enabledSources = SettingsUtility.GetEnabledSources(settings).ToList();
                 AnsiConsole.MarkupLine($"Analyzing [yellow]{csProjFile.FullName}[/]");
                 var packages = new List<Package>();
                 using (var fileStream = File.OpenRead(csProjFile.FullName))
@@ -95,6 +96,7 @@ namespace NuPU
                     AnsiConsole.Markup(package.Id);
 
                     var showUpToDate = true;
+                    var sourcesToDelete = new List<PackageSource>();
                     foreach (var source in enabledSources)
                     {
                         var repository = new SourceRepository(source, Repository.Provider.GetCoreV3());
@@ -172,7 +174,17 @@ namespace NuPU
                                 }
                             }
                         }
+                        catch (FatalProtocolException ex) when (IsAuthenticationError(ex))
+                        {
+                            sourcesToDelete.Add(source);
+                        }
                         catch { }
+                    }
+
+                    // If we had any unauthenticated sources we remove them to avoid requesting them for the next package.
+                    foreach (var sourceToDelete in sourcesToDelete)
+                    {
+                        if (enabledSources.Contains(sourceToDelete)) enabledSources.Remove(sourceToDelete);
                     }
 
                     if (showUpToDate) AnsiConsole.MarkupLine(UpToDate);
@@ -180,6 +192,12 @@ namespace NuPU
             }
 
             return 0;
+        }
+
+        private static bool IsAuthenticationError(FatalProtocolException ex)
+        {
+            var baseException = ex.GetBaseException() as HttpRequestException;
+            return baseException == null ? false : baseException.StatusCode == System.Net.HttpStatusCode.Unauthorized;
         }
 
         private bool Ignored(FileInfo fileInfo, List<string> ignoreDirs)
