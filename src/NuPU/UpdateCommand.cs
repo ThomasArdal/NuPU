@@ -1,5 +1,6 @@
 ﻿using NuGet.Common;
 using NuGet.Configuration;
+using NuGet.Credentials;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 using Spectre.Console;
@@ -30,6 +31,8 @@ namespace NuPU
                 if (version != null) AnsiConsole.WriteLine(version.ToString());
                 return 0;
             }
+
+            DefaultCredentialServiceUtility.SetupDefaultCredentialService(new NullLogger(), !updateCommandSettings.Interactive);
 
             var rootPath = string.IsNullOrWhiteSpace(updateCommandSettings.Directory) || !Directory.Exists(updateCommandSettings.Directory)
                 ? Directory.GetCurrentDirectory()
@@ -266,6 +269,11 @@ namespace NuPU
             [CommandOption("-i|--includeprerelease")]
             [DefaultValue(true)]
             public bool IncludePrerelease { get; set; }
+
+            [Description("Run the tool in interactive mode (default: false)")]
+            [CommandOption("--interactive")]
+            [DefaultValue(false)]
+            public bool Interactive { get; set; }
         }
     }
 }
