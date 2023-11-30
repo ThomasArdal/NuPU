@@ -75,9 +75,11 @@ namespace NuPU
                 if (packages.Count() == 0) continue;
 
                 var projectFileResults = new Dictionary<string, string>();
+                var skip = false;
 
                 foreach (var package in packages.Where(p => string.IsNullOrWhiteSpace(updateCommandSettings.Package) || string.Equals(p.Id, updateCommandSettings.Package, StringComparison.OrdinalIgnoreCase)))
                 {
+                    if (skip) break;
                     NuGetVersion nugetVersion = null;
                     if (VersionRange.TryParse(package.Version, out VersionRange versionRange))
                     {
@@ -137,12 +139,19 @@ namespace NuPU
                             var currentVersionString = $"{nugetVersion.OriginalVersion} (current)";
                             choices.Add(currentVersionString);
                             choices.AddRange(versionsToShow.OrderBy(v => v).Select(v => v.ToString()));
+                            var skipString = "Skip project";
+                            choices.Add(skipString);
 
                             showUpToDate = false;
                             AnsiConsole.MarkupLine(NeedsUpdate);
                             var choice = AnsiConsole.Prompt(new SelectionPrompt<string>().PageSize(10).AddChoices(choices.ToArray()));
 
                             if (choice == currentVersionString) continue;
+                            if (choice == skipString)
+                            {
+                                skip = true;
+                                break;
+                            }
 
                             var dotnet = new ProcessStartInfo("dotnet", $"add package {package.Id} -v {choice} -s {source.SourceUri}")
                             {
