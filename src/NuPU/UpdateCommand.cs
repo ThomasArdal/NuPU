@@ -47,7 +47,7 @@ namespace NuPU
             {
                 var settings = Settings.LoadDefaultSettings(csProjFile.Directory.FullName);
                 var enabledSources = SettingsUtility.GetEnabledSources(settings).ToList();
-                AnsiConsole.MarkupLine($"Analyzing [yellow]{csProjFile.FullName}[/]");
+                AnsiConsole.MarkupLine($"Analyzing [grey]{csProjFile.FullName}[/]");
                 var packages = new List<Package>();
                 using (var fileStream = File.OpenRead(csProjFile.FullName))
                 {
@@ -225,7 +225,7 @@ namespace NuPU
             var nupuIgnore = Path.Combine(rootPath, ".nupuignore");
             if (File.Exists(nupuIgnore))
             {
-                AnsiConsole.MarkupLine($"Ignore directories in [yellow]{nupuIgnore}[/]");
+                AnsiConsole.MarkupLine($"Ignore directories in [grey]{nupuIgnore}[/]");
                 var lines = File.ReadAllLines(nupuIgnore);
                 ignoreDirs = lines.Where(l => !string.IsNullOrWhiteSpace(l)).ToList();
             }
