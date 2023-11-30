@@ -139,7 +139,7 @@ namespace NuPU
                             var currentVersionString = $"{nugetVersion.OriginalVersion} (current)";
                             choices.Add(currentVersionString);
                             choices.AddRange(versionsToShow.OrderBy(v => v).Select(v => v.ToString()));
-                            var skipString = "Skip project";
+                            var skipString = "[invert]Skip project[/]";
                             choices.Add(skipString);
 
                             showUpToDate = false;
