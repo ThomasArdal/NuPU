@@ -20,6 +20,12 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>nupu</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
+    <!-- Package validation -->
+    <EnablePackageValidation>true</EnablePackageValidation>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
   <ItemGroup>
