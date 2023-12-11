@@ -28,6 +28,12 @@ jobs:
     - name: Pack
       run: dotnet pack -c Release src/NuPU/NuPU.csproj /p:Version=1.0.${{ github.run_number }}
 
+    - name: Install dotnet-validate
+      run: dotnet tool install --global dotnet-validate --version 0.0.1-preview.304
+
+    - name: Validate Elmah.Io.AspNetCore
+      run: dotnet-validate package local src/NuPU/nupkg/NuPU.1.0.${{ github.run_number }}.nupkg
+
     - name: Push to nuget.org
       run: dotnet nuget push src/NuPU/nupkg/NuPU.1.0.${{ github.run_number }}.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
       if: ${{ github.event_name == 'push' }}
