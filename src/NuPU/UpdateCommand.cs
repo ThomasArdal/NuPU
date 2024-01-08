@@ -72,9 +72,8 @@ namespace NuPU
                     }
                 }
 
-                if (packages.Count() == 0) continue;
+                if (!packages.Any()) continue;
 
-                var projectFileResults = new Dictionary<string, string>();
                 var skip = false;
 
                 foreach (var package in packages.Where(p => string.IsNullOrWhiteSpace(updateCommandSettings.Package) || string.Equals(p.Id, updateCommandSettings.Package, StringComparison.OrdinalIgnoreCase)))
@@ -187,19 +186,19 @@ namespace NuPU
                         {
                             sourcesToDelete.Add(source);
                         }
-                        catch { }
+                        catch (Exception ex)
+                        {
+                            AnsiConsole.WriteException(ex);
+                        }
                     }
 
                     if (showUpToDate) AnsiConsole.MarkupLine(UpToDate);
 
                     // If we had any unauthenticated sources we remove them to avoid requesting them for the next package.
-                    foreach (var sourceToDelete in sourcesToDelete)
+                    foreach (var sourceToDelete in sourcesToDelete.Where(s => enabledSources.Contains(s)))
                     {
-                        if (enabledSources.Contains(sourceToDelete))
-                        {
-                            AnsiConsole.MarkupLine($"[yellow]Unauthenticated source '{sourceToDelete.Name}'. Skipping further requests on this source.[/]");
-                            enabledSources.Remove(sourceToDelete);
-                        }
+                        AnsiConsole.MarkupLine($"[yellow]Unauthenticated source '{sourceToDelete.Name}'. Skipping further requests on this source.[/]");
+                        enabledSources.Remove(sourceToDelete);
                     }
                 }
             }
@@ -210,7 +209,7 @@ namespace NuPU
         private static bool IsAuthenticationError(FatalProtocolException ex)
         {
             var baseException = ex.GetBaseException() as HttpRequestException;
-            return baseException == null ? false : baseException.StatusCode == System.Net.HttpStatusCode.Unauthorized;
+            return baseException?.StatusCode == System.Net.HttpStatusCode.Unauthorized;
         }
 
         private bool Ignored(FileInfo fileInfo, List<string> ignoreDirs)
@@ -271,7 +270,7 @@ namespace NuPU
             return versions.Where(v => v.Version.Major > nugetVersion.Major).GroupBy(v => v.Version.Major).Select(g => g.OrderByDescending(v => v).First());
         }
 
-        private class Package
+        private sealed class Package
         {
             public string Id { get; set; }
             public string Version { get; set; }
