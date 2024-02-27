@@ -218,7 +218,7 @@ namespace NuPU
         private static string Colored(NuGetVersion currentVersion, NuGetVersion newVersion)
         {
             if (currentVersion.Major != newVersion.Major) return $"[red]{newVersion}[/]";
-            else if (currentVersion.Minor != newVersion.Minor) return $"[yellow]{newVersion}[/]";
+            else if (currentVersion.Minor != newVersion.Minor || newVersion.IsPrerelease) return $"[yellow]{newVersion}[/]";
             else return $"[green]{newVersion}[/]";
         }
 
