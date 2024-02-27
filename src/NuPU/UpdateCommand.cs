@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -137,8 +138,8 @@ namespace NuPU
                             var choices = new List<string>();
                             var currentVersionString = $"{nugetVersion.OriginalVersion} (current)";
                             choices.Add(currentVersionString);
-                            choices.AddRange(versionsToShow.OrderBy(v => v).Select(v => v.ToString()));
-                            var skipString = "[invert]Skip project[/]";
+                            choices.AddRange(versionsToShow.OrderBy(v => v).Select(v => Colored(nugetVersion, v)));
+                            var skipString = "[grey]Skip project[/]";
                             choices.Add(skipString);
 
                             showUpToDate = false;
@@ -152,7 +153,7 @@ namespace NuPU
                                 break;
                             }
 
-                            var dotnet = new ProcessStartInfo("dotnet", $"add package {package.Id} -v {choice} -s {source.SourceUri}")
+                            var dotnet = new ProcessStartInfo("dotnet", $"add package {package.Id} -v {Uncolored(choice)} -s {source.SourceUri}")
                             {
                                 WorkingDirectory = csProjFile.Directory.FullName,
                                 CreateNoWindow = true,
@@ -176,10 +177,12 @@ namespace NuPU
                             if (!string.IsNullOrWhiteSpace(outputAndError[0]))
                             {
                                 var lines = outputAndError[0].Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+#pragma warning disable S6608 // Prefer indexing instead of "Enumerable" methods on types implementing "IList"
                                 if (lines.Length > 0 && lines.Last().StartsWith("error"))
                                 {
                                     AnsiConsole.MarkupLine($"[red]{lines.Last()}[/]");
                                 }
+#pragma warning restore S6608 // Prefer indexing instead of "Enumerable" methods on types implementing "IList"
                             }
                         }
                         catch (FatalProtocolException ex) when (IsAuthenticationError(ex))
@@ -206,13 +209,26 @@ namespace NuPU
             return 0;
         }
 
+        public static string Uncolored(string input)
+        {
+            var pattern = @"\[(.*?)\](.*?)\[\/\]";
+            return Regex.Replace(input, pattern, "$2");
+        }
+
+        private static string Colored(NuGetVersion currentVersion, NuGetVersion newVersion)
+        {
+            if (currentVersion.Major != newVersion.Major) return $"[red]{newVersion}[/]";
+            else if (currentVersion.Minor != newVersion.Minor) return $"[yellow]{newVersion}[/]";
+            else return $"[green]{newVersion}[/]";
+        }
+
         private static bool IsAuthenticationError(FatalProtocolException ex)
         {
             var baseException = ex.GetBaseException() as HttpRequestException;
             return baseException?.StatusCode == System.Net.HttpStatusCode.Unauthorized;
         }
 
-        private bool Ignored(FileInfo fileInfo, List<string> ignoreDirs)
+        private static bool Ignored(FileInfo fileInfo, List<string> ignoreDirs)
         {
             if (ignoreDirs.Count == 0) return false;
 
@@ -226,7 +242,7 @@ namespace NuPU
             return false;
         }
 
-        private List<string> ResolveIgnoreDirs(string rootPath)
+        private static List<string> ResolveIgnoreDirs(string rootPath)
         {
             var ignoreDirs = new List<string> { ".git", ".github", ".vs", ".vscode", "bin", "obj", "packages", "node_modules" };
 
