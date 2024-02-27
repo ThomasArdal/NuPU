@@ -300,7 +300,7 @@ namespace NuPU
             [DefaultValue(true)]
             public bool IncludePrerelease { get; set; }
 
-            [Description("Run the tool in interactive mode (default: false)")]
+            [Description("Run the tool in NuGet interactive mode which will prompt you to log in and more (default: false)")]
             [CommandOption("--interactive")]
             [DefaultValue(false)]
             public bool Interactive { get; set; }
