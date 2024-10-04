@@ -205,7 +205,7 @@ namespace NuPU
         public static string Uncolored(string input)
         {
             var pattern = @"\[(.*?)\](.*?)\[\/\]";
-            return Regex.Replace(input, pattern, "$2");
+            return Regex.Replace(input, pattern, "$2", RegexOptions.None, TimeSpan.FromSeconds(1));
         }
 
         private static string Colored(NuGetVersion currentVersion, NuGetVersion newVersion)
