@@ -73,7 +73,7 @@ namespace NuPU
                     }
                 }
 
-                if (!packages.Any()) continue;
+                if (packages.Count == 0) continue;
 
                 var skip = false;
 
@@ -108,7 +108,7 @@ namespace NuPU
                             using var cacheContext = new SourceCacheContext();
                             var allVersions = await resource.GetAllVersionsAsync(package.Id, cacheContext, NullLogger.Instance, CancellationToken.None);
                             var newerVersions = allVersions.Where(v => v > nugetVersion).ToList();
-                            if (!newerVersions.Any())
+                            if (newerVersions.Count == 0)
                             {
                                 continue;
                             }
@@ -144,7 +144,7 @@ namespace NuPU
 
                             showUpToDate = false;
                             AnsiConsole.MarkupLine(NeedsUpdate);
-                            var choice = AnsiConsole.Prompt(new SelectionPrompt<string>().PageSize(10).AddChoices(choices.ToArray()));
+                            var choice = AnsiConsole.Prompt(new SelectionPrompt<string>().PageSize(10).AddChoices([.. choices]));
 
                             if (choice == currentVersionString) continue;
                             if (choice == skipString)
@@ -164,7 +164,7 @@ namespace NuPU
                             var process = Process.Start(dotnet);
                             var outputAndError = await Task.WhenAll(process.StandardOutput.ReadToEndAsync(), process.StandardError.ReadToEndAsync());
 
-                            process.WaitForExit();
+                            await process.WaitForExitAsync();
                             var exitCode = process.ExitCode;
 
                             if (exitCode != 0)
@@ -257,7 +257,7 @@ namespace NuPU
             return ignoreDirs;
         }
 
-        private static IEnumerable<NuGetVersion> HighestRevision(IEnumerable<NuGetVersion> versions, NuGetVersion nugetVersion)
+        private static List<NuGetVersion> HighestRevision(IEnumerable<NuGetVersion> versions, NuGetVersion nugetVersion)
         {
             var toReturn = new List<NuGetVersion>();
             var toAdd = versions.Where(v => v.Version.Major == nugetVersion.Major && v.Version.Minor == nugetVersion.Minor && v.Version.Build == nugetVersion.Patch && v.Version.Revision > nugetVersion.Revision).OrderByDescending(v => v).FirstOrDefault();
@@ -265,7 +265,7 @@ namespace NuPU
             return toReturn;
         }
 
-        private static IEnumerable<NuGetVersion> HighestPatch(IEnumerable<NuGetVersion> versions, NuGetVersion nugetVersion)
+        private static List<NuGetVersion> HighestPatch(IEnumerable<NuGetVersion> versions, NuGetVersion nugetVersion)
         {
             var toReturn = new List<NuGetVersion>();
             var toAdd = versions.Where(v => v.Version.Major == nugetVersion.Major && v.Version.Minor == nugetVersion.Minor && v.Version.Build > nugetVersion.Patch).OrderByDescending(v => v).FirstOrDefault();
@@ -273,7 +273,7 @@ namespace NuPU
             return toReturn;
         }
 
-        private static IEnumerable<NuGetVersion> HighestMinor(IEnumerable<NuGetVersion> versions, NuGetVersion nugetVersion)
+        private static List<NuGetVersion> HighestMinor(IEnumerable<NuGetVersion> versions, NuGetVersion nugetVersion)
         {
             var toReturn = new List<NuGetVersion>();
             var toAdd = versions.Where(v => v.Version.Major == nugetVersion.Major && v.Version.Minor > nugetVersion.Minor).OrderByDescending(v => v).FirstOrDefault();

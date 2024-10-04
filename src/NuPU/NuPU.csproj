@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
     <AssemblyName>nupu</AssemblyName>
-    <LangVersion>9.0</LangVersion>
+    <LangVersion>12.0</LangVersion>
     <!-- NuGet package -->
     <Description>NuGet Package Updater (NuPU) is an interactive CLI for updating NuGet packages.</Description>
     <Authors>ThomasArdal</Authors>
