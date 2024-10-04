@@ -15,12 +15,15 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
 
     - name: Install dependencies
       run: dotnet restore
+
+    - name: Check vulnerable NuGet packages
+      uses: elmahio/github-check-vulnerable-nuget-packages-action@v1
 
     - name: Build
       run: dotnet build -c Release
@@ -38,12 +41,13 @@ jobs:
       run: dotnet nuget push src/NuPU/nupkg/NuPU.1.0.${{ github.run_number }}.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
       if: ${{ github.event_name == 'push' }}
 
-    - name: Create the Release
+    - name: Create Release
       if: ${{ github.event_name == 'push' }}
-      uses: actions/create-release@v1.1.4
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: 1.0.${{ github.run_number }}
-        release_name: Release 1.0.${{ github.run_number }}
+        name: 1.0.${{ github.run_number }}
         draft: false
+        fail_on_unmatched_files: true
+        generate_release_notes: true
+        token: ${{ secrets.GITHUB_TOKEN }}
