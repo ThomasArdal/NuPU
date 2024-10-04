@@ -27,6 +27,13 @@ namespace NuPU
 
         public override async Task<int> ExecuteAsync(CommandContext context, UpdateCommandSettings updateCommandSettings)
         {
+            if (updateCommandSettings.Version)
+            {
+                var version = GetType().Assembly.GetName().Version;
+                if (version != null) AnsiConsole.WriteLine(version.ToString());
+                return 0;
+            }
+
             DefaultCredentialServiceUtility.SetupDefaultCredentialService(new NullLogger(), !updateCommandSettings.Interactive);
 
             var rootPath = string.IsNullOrWhiteSpace(updateCommandSettings.Directory) || !Directory.Exists(updateCommandSettings.Directory)
@@ -287,6 +294,10 @@ namespace NuPU
 
         public class UpdateCommandSettings : CommandSettings
         {
+            [Description("Show version information")]
+            [CommandOption("-v||--version")]
+            public bool Version { get; set; }
+
             [Description("A root directory to search (default: current directory)")]
             [CommandOption("-d|--directory")]
             public string Directory { get; set; }
