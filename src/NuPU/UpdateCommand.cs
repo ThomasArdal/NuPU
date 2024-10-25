@@ -81,11 +81,14 @@ namespace NuPU
                 {
                     if (skip) break;
                     NuGetVersion nugetVersion = null;
-                    if (VersionRange.TryParse(package.Version, out VersionRange versionRange))
+
+                    var packageVersion = package.Version ?? GetPackageVersionFromProps(package.Id, csProjFile.Directory, rootDir);
+
+                    if (VersionRange.TryParse(packageVersion, out VersionRange versionRange))
                     {
                         nugetVersion = versionRange.MinVersion;
                     }
-                    else if (NuGetVersion.TryParse(package.Version, out NuGetVersion parsedVersion))
+                    else if (NuGetVersion.TryParse(packageVersion, out NuGetVersion parsedVersion))
                     {
                         nugetVersion = parsedVersion;
                     }
@@ -213,6 +216,50 @@ namespace NuPU
         {
             var pattern = @"\[(.*?)\](.*?)\[\/\]";
             return Regex.Replace(input, pattern, "$2", RegexOptions.None, TimeSpan.FromSeconds(1));
+        }
+
+        private static string GetPackageVersionFromProps(string packageId, DirectoryInfo startDirectory, DirectoryInfo rootDirectory)
+        {
+            var currentDirectory = startDirectory;
+            while (currentDirectory != null)
+            {
+                var packageVersions = LoadPackageVersionsFromPropsFile(currentDirectory.FullName);
+                if (packageVersions.TryGetValue(packageId, out var version))
+                {
+                    return version;
+                }
+
+                // Stop traversal once we reach or exceed the root directory's parent
+                if (currentDirectory.FullName == rootDirectory.FullName)
+                {
+                    break;
+                }
+
+                currentDirectory = currentDirectory.Parent;
+            }
+            return null;
+        }
+
+        private static Dictionary<string, string> LoadPackageVersionsFromPropsFile(string directory)
+        {
+            var packagesPropsPath = Path.Combine(directory, "Directory.Packages.props");
+            var packageVersions = new Dictionary<string, string>();
+
+            if (File.Exists(packagesPropsPath))
+            {
+                var doc = XDocument.Load(packagesPropsPath);
+                foreach (var package in doc.Descendants("PackageReference"))
+                {
+                    var packageName = package.Attribute("Include")?.Value;
+                    var packageVersion = package.Attribute("Version")?.Value;
+                    if (!string.IsNullOrEmpty(packageName) && !string.IsNullOrEmpty(packageVersion))
+                    {
+                        packageVersions[packageName] = packageVersion;
+                    }
+                }
+            }
+
+            return packageVersions;
         }
 
         private static string Colored(NuGetVersion currentVersion, NuGetVersion newVersion)
