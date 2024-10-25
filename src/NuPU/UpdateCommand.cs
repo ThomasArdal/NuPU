@@ -248,7 +248,7 @@ namespace NuPU
             if (File.Exists(packagesPropsPath))
             {
                 var doc = XDocument.Load(packagesPropsPath);
-                foreach (var package in doc.Descendants("PackageReference"))
+                foreach (var package in doc.Descendants("PackageVersion"))
                 {
                     var packageName = package.Attribute("Include")?.Value;
                     var packageVersion = package.Attribute("Version")?.Value;
