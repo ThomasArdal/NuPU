@@ -24,6 +24,7 @@ namespace NuPU
     {
         private const string UpToDate = " [green]up to date[/]";
         private const string NeedsUpdate = " [red]needs update[/]";
+        private static readonly Dictionary<string, Dictionary<string, string>> cachedPackageVersions = [];
 
         public override async Task<int> ExecuteAsync(CommandContext context, UpdateCommandSettings updateCommandSettings)
         {
@@ -242,6 +243,12 @@ namespace NuPU
 
         private static Dictionary<string, string> LoadPackageVersionsFromPropsFile(string directory)
         {
+            // Check if this directory's package versions are already cached
+            if (cachedPackageVersions.TryGetValue(directory, out var cachedVersions))
+            {
+                return cachedVersions;
+            }
+
             var packagesPropsPath = Path.Combine(directory, "Directory.Packages.props");
             var packageVersions = new Dictionary<string, string>();
 
@@ -257,6 +264,9 @@ namespace NuPU
                         packageVersions[packageName] = packageVersion;
                     }
                 }
+
+                // Cache the loaded package versions only if the file exists
+                cachedPackageVersions[directory] = packageVersions;
             }
 
             return packageVersions;
