@@ -61,11 +61,7 @@ namespace NuPU
                         var itemGroups = project!
                             .Elements(ns + "ItemGroup")
                             .ToList();
-                        packages.AddRange(itemGroups.SelectMany(ig => ig.Elements(ns + "PackageReference")).Select(e => new Package
-                        {
-                            Id = e.Attribute("Include")?.Value,
-                            Version = e.Attribute("Version")?.Value ?? e.Element(ns + "Version")?.Value,
-                        }));
+                        packages.AddRange(itemGroups.SelectMany(ig => ig.Elements(ns + "PackageReference")).Select(e => CreatePackageObject(e, ns)));
                     }
                     catch (XmlException e)
                     {
@@ -235,6 +231,15 @@ namespace NuPU
             }
 
             return 0;
+        }
+
+        private static Package CreatePackageObject(XElement e, XNamespace ns)
+        {
+            return new Package
+            {
+                Id = e.Attribute("Include")?.Value,
+                Version = e.Attribute("Version")?.Value ?? e.Element(ns + "Version")?.Value,
+            };
         }
 
         public static string Uncolored(string input)
