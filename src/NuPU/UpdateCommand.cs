@@ -161,7 +161,7 @@ namespace NuPU
                             var currentVersionString = $"{minNuGetVersion.OriginalVersion} (current)";
                             choices.Add(currentVersionString);
                             choices.AddRange(versionsToShow.OrderBy(v => v).Select(v => Colored(minNuGetVersion, v)));
-                            var skipString = "[grey]Skip project[/]";
+                            const string skipString = "[grey]Skip project[/]";
                             choices.Add(skipString);
 
                             showUpToDate = false;
@@ -233,7 +233,7 @@ namespace NuPU
 
         public static string Uncolored(string input)
         {
-            var pattern = @"\[(.*?)\](.*?)\[\/\]";
+            const string pattern = @"\[(.*?)\](.*?)\[\/\]";
             return Regex.Replace(input, pattern, "$2", RegexOptions.None, TimeSpan.FromSeconds(1));
         }
 
