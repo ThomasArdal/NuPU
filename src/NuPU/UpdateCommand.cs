@@ -135,9 +135,10 @@ namespace NuPU
                                 continue;
                             }
 
-                            var stableVersions = newerVersions.Where(v => !v.IsPrerelease);
+                            var stableVersions = newerVersions.Where(v => !v.IsPrerelease).ToArray();
 
                             var versionsToShow = new List<NuGetVersion>();
+
                             versionsToShow.AddRange(HighestMajor(stableVersions, minNuGetVersion));
                             versionsToShow.AddRange(HighestMinor(stableVersions, minNuGetVersion));
                             versionsToShow.AddRange(HighestPatch(stableVersions, minNuGetVersion));
@@ -145,7 +146,7 @@ namespace NuPU
 
                             if (updateCommandSettings.IncludePrerelease)
                             {
-                                var prereleaseVersions = newerVersions.Where(v => v.IsPrerelease);
+                                var prereleaseVersions = newerVersions.Where(v => v.IsPrerelease).ToArray();
                                 versionsToShow.AddRange(HighestMajor(prereleaseVersions, minNuGetVersion));
                                 versionsToShow.AddRange(HighestMinor(prereleaseVersions, minNuGetVersion));
                                 versionsToShow.AddRange(HighestPatch(prereleaseVersions, minNuGetVersion));
