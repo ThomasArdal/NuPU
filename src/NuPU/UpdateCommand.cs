@@ -61,7 +61,9 @@ namespace NuPU
                         var itemGroups = project!
                             .Elements(ns + "ItemGroup")
                             .ToList();
-                        packages.AddRange(itemGroups.SelectMany(ig => ig.Elements(ns + "PackageReference")).Select(e => CreatePackageObject(e, ns)));
+                        var packageReferences = itemGroups.SelectMany(ig => ig.Elements(ns + "PackageReference"));
+                        var packageObjects = packageReferences.Select(e => CreatePackageObject(e, ns)).WhereNotNull();
+                        packages.AddRange(packageObjects);
                     }
                     catch (XmlException e)
                     {
@@ -233,13 +235,43 @@ namespace NuPU
             return 0;
         }
 
-        private static Package CreatePackageObject(XElement e, XNamespace ns)
+        private static Package? CreatePackageObject(XElement e, XNamespace ns)
         {
-            return new Package
+            // Examples from https://stackoverflow.com/q/71660693/23118
+            //     <PackageReference Include="Some.Package" Version="1.2.3"/>
+            //     <PackageReference Update="Some.Package" PrivateAssets="all"/
+            // Example from my current project
+            //     <PackageReference Update="FluentAssertions" Version="7.0.0" />
+            // So "PackageReference Include" should always include a version
+            // (directly or indirectly though a Props file) however
+            // "PackageReference Update" does not have to.
+            var version = e.Attribute("Version")?.Value ?? e.Element(ns + "Version")?.Value;
+
+            var includeAttribute = e.Attribute("Include");
+            if (includeAttribute != null)
             {
-                Id = e.Attribute("Include")?.Value,
-                Version = e.Attribute("Version")?.Value ?? e.Element(ns + "Version")?.Value,
-            };
+                return new Package
+                {
+                    Id = includeAttribute.Value,
+                    Version = version,
+                };
+            }
+
+            var updateAttribute = e.Attribute("Update");
+            if (updateAttribute != null)
+            {
+                if (version == null)
+                {
+                    return null;
+                }
+                return new Package
+                {
+                    Id = updateAttribute.Value,
+                    Version = version,
+                };
+            }
+
+            return null;
         }
 
         public static string Uncolored(string input)
@@ -406,6 +438,15 @@ namespace NuPU
             [CommandOption("--interactive")]
             [DefaultValue(false)]
             public bool Interactive { get; set; }
+        }
+    }
+
+    public static class Extension
+    {
+        // Based on https://stackoverflow.com/a/58373257/23118 and https://stackoverflow.com/a/58510691/23118
+        public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> e) where T : class
+        {
+            return e.OfType<T>();
         }
     }
 }
