@@ -84,7 +84,7 @@ namespace NuPU
 
                     var packageVersion = package.Version ?? GetPackageVersionFromProps(package.Id, csProjFile.Directory, rootDir);
 
-                    if (VersionRange.TryParse(packageVersion, out VersionRange versionRange))
+                    if (packageVersion != null && VersionRange.TryParse(packageVersion, out VersionRange versionRange))
                     {
                         minNuGetVersion = versionRange.MinVersion;
                         isMinInclusive = versionRange.IsMinInclusive;
@@ -248,7 +248,7 @@ namespace NuPU
             return Regex.Replace(input, pattern, "$2", RegexOptions.None, TimeSpan.FromSeconds(1));
         }
 
-        private static string GetPackageVersionFromProps(string packageId, DirectoryInfo startDirectory, DirectoryInfo rootDirectory)
+        private static string? GetPackageVersionFromProps(string packageId, DirectoryInfo startDirectory, DirectoryInfo rootDirectory)
         {
             var currentDirectory = startDirectory;
             while (currentDirectory != null)
