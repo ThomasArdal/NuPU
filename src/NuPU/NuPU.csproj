@@ -22,6 +22,7 @@
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <!-- Package validation -->
     <EnablePackageValidation>true</EnablePackageValidation>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">

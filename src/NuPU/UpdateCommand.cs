@@ -47,7 +47,7 @@ namespace NuPU
             var csProjFiles = rootDir.EnumerateFiles("*.csproj", new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = updateCommandSettings.Recursive });
             foreach (var csProjFile in csProjFiles.Where(f => !Ignored(f, ignoreDirs)))
             {
-                var settings = Settings.LoadDefaultSettings(csProjFile.Directory.FullName);
+                var settings = Settings.LoadDefaultSettings(csProjFile.Directory!.FullName);
                 var enabledSources = SettingsUtility.GetEnabledSources(settings).ToList();
                 AnsiConsole.MarkupLine($"Analyzing [grey]{csProjFile.FullName}[/]");
                 var packages = new List<Package>();
@@ -56,9 +56,9 @@ namespace NuPU
                     try
                     {
                         var document = XDocument.Load(fileStream);
-                        var ns = document.Root.GetDefaultNamespace();
+                        var ns = document.Root!.GetDefaultNamespace();
                         var project = document.Element(ns + "Project");
-                        var itemGroups = project
+                        var itemGroups = project!
                             .Elements(ns + "ItemGroup")
                             .ToList();
                         packages.AddRange(itemGroups.SelectMany(ig => ig.Elements(ns + "PackageReference")).Select(e => new Package
@@ -185,6 +185,11 @@ namespace NuPU
                                 RedirectStandardError = true,
                             };
                             var process = Process.Start(dotnet);
+                            if (process == null)
+                            {
+                                return -1;
+                            }
+
                             var outputAndError = await Task.WhenAll(process.StandardOutput.ReadToEndAsync(), process.StandardError.ReadToEndAsync());
 
                             await process.WaitForExitAsync();
@@ -365,7 +370,7 @@ namespace NuPU
         private sealed class Package
         {
             public string Id { get; init; }
-            public string Version { get; init; }
+            public string? Version { get; init; }
         }
 
         public class UpdateCommandSettings : CommandSettings
@@ -376,11 +381,11 @@ namespace NuPU
 
             [Description("A root directory to search (default: current directory)")]
             [CommandOption("-d|--directory")]
-            public string Directory { get; set; }
+            public string? Directory { get; set; }
 
             [Description("A NuGet package to update (default: all)")]
             [CommandOption("-p|--package")]
-            public string Package { get; set; }
+            public string? Package { get; set; }
 
             [Description("Include subdirectories when looking for csproj files (default: true)")]
             [CommandOption("-r|--recursive")]
