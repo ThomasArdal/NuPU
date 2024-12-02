@@ -363,8 +363,8 @@ namespace NuPU
 
         private sealed class Package
         {
-            public string Id { get; set; }
-            public string Version { get; set; }
+            public string Id { get; init; }
+            public string Version { get; init; }
         }
 
         public class UpdateCommandSettings : CommandSettings
