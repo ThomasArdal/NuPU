@@ -81,17 +81,23 @@ namespace NuPU
                 foreach (var package in packages.Where(p => string.IsNullOrWhiteSpace(updateCommandSettings.Package) || string.Equals(p.Id, updateCommandSettings.Package, StringComparison.OrdinalIgnoreCase)))
                 {
                     if (skip) break;
-                    NuGetVersion nugetVersion = null;
+                    NuGetVersion minNuGetVersion = null;
+                    var isMinInclusive = true;
+                    NuGetVersion maxNuGetVersion = null;
+                    var isMaxInclusive = true;
 
                     var packageVersion = package.Version ?? GetPackageVersionFromProps(package.Id, csProjFile.Directory, rootDir);
 
                     if (VersionRange.TryParse(packageVersion, out VersionRange versionRange))
                     {
-                        nugetVersion = versionRange.MinVersion;
+                        minNuGetVersion = versionRange.MinVersion;
+                        isMinInclusive = versionRange.IsMinInclusive;
+                        maxNuGetVersion = versionRange.MaxVersion;
+                        isMaxInclusive = versionRange.IsMaxInclusive;
                     }
                     else if (NuGetVersion.TryParse(packageVersion, out NuGetVersion parsedVersion))
                     {
-                        nugetVersion = parsedVersion;
+                        minNuGetVersion = parsedVersion;
                     }
                     else
                     {
@@ -111,7 +117,19 @@ namespace NuPU
                             FindPackageByIdResource resource = await repository.GetResourceAsync<FindPackageByIdResource>();
                             using var cacheContext = new SourceCacheContext();
                             var allVersions = await resource.GetAllVersionsAsync(package.Id, cacheContext, NullLogger.Instance, CancellationToken.None);
-                            var newerVersions = allVersions.Where(v => v > nugetVersion).ToList();
+                            var newerVersions = allVersions
+                                .Where(v =>
+                                {
+                                    var isAboveMin = minNuGetVersion == null ||
+                                        (isMinInclusive ? v >= minNuGetVersion : v > minNuGetVersion);
+
+                                    var isBelowMax = maxNuGetVersion == null ||
+                                        (isMaxInclusive ? v <= maxNuGetVersion : v < maxNuGetVersion);
+
+                                    return isAboveMin && isBelowMax;
+                                })
+                                .ToList();
+
                             if (newerVersions.Count == 0)
                             {
                                 continue;
@@ -120,18 +138,18 @@ namespace NuPU
                             var stableVersions = newerVersions.Where(v => !v.IsPrerelease);
 
                             var versionsToShow = new List<NuGetVersion>();
-                            versionsToShow.AddRange(HighestMajor(stableVersions, nugetVersion));
-                            versionsToShow.AddRange(HighestMinor(stableVersions, nugetVersion));
-                            versionsToShow.AddRange(HighestPatch(stableVersions, nugetVersion));
-                            versionsToShow.AddRange(HighestRevision(stableVersions, nugetVersion));
+                            versionsToShow.AddRange(HighestMajor(stableVersions, minNuGetVersion));
+                            versionsToShow.AddRange(HighestMinor(stableVersions, minNuGetVersion));
+                            versionsToShow.AddRange(HighestPatch(stableVersions, minNuGetVersion));
+                            versionsToShow.AddRange(HighestRevision(stableVersions, minNuGetVersion));
 
                             if (updateCommandSettings.IncludePrerelease)
                             {
                                 var prereleaseVersions = newerVersions.Where(v => v.IsPrerelease);
-                                versionsToShow.AddRange(HighestMajor(prereleaseVersions, nugetVersion));
-                                versionsToShow.AddRange(HighestMinor(prereleaseVersions, nugetVersion));
-                                versionsToShow.AddRange(HighestPatch(prereleaseVersions, nugetVersion));
-                                versionsToShow.AddRange(HighestRevision(prereleaseVersions, nugetVersion));
+                                versionsToShow.AddRange(HighestMajor(prereleaseVersions, minNuGetVersion));
+                                versionsToShow.AddRange(HighestMinor(prereleaseVersions, minNuGetVersion));
+                                versionsToShow.AddRange(HighestPatch(prereleaseVersions, minNuGetVersion));
+                                versionsToShow.AddRange(HighestRevision(prereleaseVersions, minNuGetVersion));
                             }
 
                             if (versionsToShow.Count == 0)
@@ -140,9 +158,9 @@ namespace NuPU
                             }
 
                             var choices = new List<string>();
-                            var currentVersionString = $"{nugetVersion.OriginalVersion} (current)";
+                            var currentVersionString = $"{minNuGetVersion.OriginalVersion} (current)";
                             choices.Add(currentVersionString);
-                            choices.AddRange(versionsToShow.OrderBy(v => v).Select(v => Colored(nugetVersion, v)));
+                            choices.AddRange(versionsToShow.OrderBy(v => v).Select(v => Colored(minNuGetVersion, v)));
                             var skipString = "[grey]Skip project[/]";
                             choices.Add(skipString);
 
