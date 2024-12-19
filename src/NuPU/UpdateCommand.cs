@@ -24,7 +24,7 @@ namespace NuPU
     {
         private const string UpToDate = " [green]up to date[/]";
         private const string NeedsUpdate = " [red]needs update[/]";
-        private static readonly Dictionary<string, Dictionary<string, string>> cachedPackageVersions = [];
+        private static readonly Dictionary<string, Dictionary<string, string>> CachedPackageVersions = [];
 
         public override async Task<int> ExecuteAsync(CommandContext context, UpdateCommandSettings updateCommandSettings)
         {
@@ -47,7 +47,7 @@ namespace NuPU
             var csProjFiles = rootDir.EnumerateFiles("*.csproj", new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = updateCommandSettings.Recursive });
             foreach (var csProjFile in csProjFiles.Where(f => !Ignored(f, ignoreDirs)))
             {
-                var settings = Settings.LoadDefaultSettings(csProjFile.Directory.FullName);
+                var settings = Settings.LoadDefaultSettings(csProjFile.Directory!.FullName);
                 var enabledSources = SettingsUtility.GetEnabledSources(settings).ToList();
                 AnsiConsole.MarkupLine($"Analyzing [grey]{csProjFile.FullName}[/]");
                 var packages = new List<Package>();
@@ -56,16 +56,14 @@ namespace NuPU
                     try
                     {
                         var document = XDocument.Load(fileStream);
-                        var ns = document.Root.GetDefaultNamespace();
+                        var ns = document.Root!.GetDefaultNamespace();
                         var project = document.Element(ns + "Project");
-                        var itemGroups = project
+                        var itemGroups = project!
                             .Elements(ns + "ItemGroup")
                             .ToList();
-                        packages.AddRange(itemGroups.SelectMany(ig => ig.Elements(ns + "PackageReference")).Select(e => new Package
-                        {
-                            Id = e.Attribute("Include")?.Value,
-                            Version = e.Attribute("Version")?.Value ?? e.Element(ns + "Version")?.Value,
-                        }));
+                        var packageReferences = itemGroups.SelectMany(ig => ig.Elements(ns + "PackageReference"));
+                        var packageObjects = packageReferences.Select(e => CreatePackageObject(e, ns)).WhereNotNull();
+                        packages.AddRange(packageObjects);
                     }
                     catch (XmlException e)
                     {
@@ -88,7 +86,7 @@ namespace NuPU
 
                     var packageVersion = package.Version ?? GetPackageVersionFromProps(package.Id, csProjFile.Directory, rootDir);
 
-                    if (VersionRange.TryParse(packageVersion, out VersionRange versionRange))
+                    if (packageVersion != null && VersionRange.TryParse(packageVersion, out VersionRange versionRange))
                     {
                         minNuGetVersion = versionRange.MinVersion;
                         isMinInclusive = versionRange.IsMinInclusive;
@@ -135,9 +133,10 @@ namespace NuPU
                                 continue;
                             }
 
-                            var stableVersions = newerVersions.Where(v => !v.IsPrerelease);
+                            var stableVersions = newerVersions.Where(v => !v.IsPrerelease).ToArray();
 
                             var versionsToShow = new List<NuGetVersion>();
+
                             versionsToShow.AddRange(HighestMajor(stableVersions, minNuGetVersion));
                             versionsToShow.AddRange(HighestMinor(stableVersions, minNuGetVersion));
                             versionsToShow.AddRange(HighestPatch(stableVersions, minNuGetVersion));
@@ -145,7 +144,7 @@ namespace NuPU
 
                             if (updateCommandSettings.IncludePrerelease)
                             {
-                                var prereleaseVersions = newerVersions.Where(v => v.IsPrerelease);
+                                var prereleaseVersions = newerVersions.Where(v => v.IsPrerelease).ToArray();
                                 versionsToShow.AddRange(HighestMajor(prereleaseVersions, minNuGetVersion));
                                 versionsToShow.AddRange(HighestMinor(prereleaseVersions, minNuGetVersion));
                                 versionsToShow.AddRange(HighestPatch(prereleaseVersions, minNuGetVersion));
@@ -161,7 +160,7 @@ namespace NuPU
                             var currentVersionString = $"{minNuGetVersion.OriginalVersion} (current)";
                             choices.Add(currentVersionString);
                             choices.AddRange(versionsToShow.OrderBy(v => v).Select(v => Colored(minNuGetVersion, v)));
-                            var skipString = "[grey]Skip project[/]";
+                            const string skipString = "[grey]Skip project[/]";
                             choices.Add(skipString);
 
                             showUpToDate = false;
@@ -184,6 +183,11 @@ namespace NuPU
                                 RedirectStandardError = true,
                             };
                             var process = Process.Start(dotnet);
+                            if (process == null)
+                            {
+                                return -1;
+                            }
+
                             var outputAndError = await Task.WhenAll(process.StandardOutput.ReadToEndAsync(), process.StandardError.ReadToEndAsync());
 
                             await process.WaitForExitAsync();
@@ -231,13 +235,52 @@ namespace NuPU
             return 0;
         }
 
+        private static Package? CreatePackageObject(XElement e, XNamespace ns)
+        {
+            // Examples from https://stackoverflow.com/q/71660693/23118
+            //     <PackageReference Include="Some.Package" Version="1.2.3"/>
+            //     <PackageReference Update="Some.Package" PrivateAssets="all"/
+            // Example from my current project
+            //     <PackageReference Update="FluentAssertions" Version="7.0.0" />
+            // So "PackageReference Include" should always include a version
+            // (directly or indirectly though a Props file) however
+            // "PackageReference Update" does not have to.
+            var version = e.Attribute("Version")?.Value ?? e.Element(ns + "Version")?.Value;
+
+            var includeAttribute = e.Attribute("Include");
+            if (includeAttribute != null)
+            {
+                return new Package
+                {
+                    Id = includeAttribute.Value,
+                    Version = version,
+                };
+            }
+
+            var updateAttribute = e.Attribute("Update");
+            if (updateAttribute != null)
+            {
+                if (version == null)
+                {
+                    return null;
+                }
+                return new Package
+                {
+                    Id = updateAttribute.Value,
+                    Version = version,
+                };
+            }
+
+            return null;
+        }
+
         public static string Uncolored(string input)
         {
-            var pattern = @"\[(.*?)\](.*?)\[\/\]";
+            const string pattern = @"\[(.*?)\](.*?)\[\/\]";
             return Regex.Replace(input, pattern, "$2", RegexOptions.None, TimeSpan.FromSeconds(1));
         }
 
-        private static string GetPackageVersionFromProps(string packageId, DirectoryInfo startDirectory, DirectoryInfo rootDirectory)
+        private static string? GetPackageVersionFromProps(string packageId, DirectoryInfo startDirectory, DirectoryInfo rootDirectory)
         {
             var currentDirectory = startDirectory;
             while (currentDirectory != null)
@@ -262,7 +305,7 @@ namespace NuPU
         private static Dictionary<string, string> LoadPackageVersionsFromPropsFile(string directory)
         {
             // Check if this directory's package versions are already cached
-            if (cachedPackageVersions.TryGetValue(directory, out var cachedVersions))
+            if (CachedPackageVersions.TryGetValue(directory, out var cachedVersions))
             {
                 return cachedVersions;
             }
@@ -284,7 +327,7 @@ namespace NuPU
                 }
 
                 // Cache the loaded package versions only if the file exists
-                cachedPackageVersions[directory] = packageVersions;
+                CachedPackageVersions[directory] = packageVersions;
             }
 
             return packageVersions;
@@ -363,8 +406,8 @@ namespace NuPU
 
         private sealed class Package
         {
-            public string Id { get; set; }
-            public string Version { get; set; }
+            public string Id { get; init; }
+            public string? Version { get; init; }
         }
 
         public class UpdateCommandSettings : CommandSettings
@@ -375,11 +418,11 @@ namespace NuPU
 
             [Description("A root directory to search (default: current directory)")]
             [CommandOption("-d|--directory")]
-            public string Directory { get; set; }
+            public string? Directory { get; set; }
 
             [Description("A NuGet package to update (default: all)")]
             [CommandOption("-p|--package")]
-            public string Package { get; set; }
+            public string? Package { get; set; }
 
             [Description("Include subdirectories when looking for csproj files (default: true)")]
             [CommandOption("-r|--recursive")]
@@ -395,6 +438,15 @@ namespace NuPU
             [CommandOption("--interactive")]
             [DefaultValue(false)]
             public bool Interactive { get; set; }
+        }
+    }
+
+    public static class Extension
+    {
+        // Based on https://stackoverflow.com/a/58373257/23118 and https://stackoverflow.com/a/58510691/23118
+        public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> e) where T : class
+        {
+            return e.OfType<T>();
         }
     }
 }
